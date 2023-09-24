@@ -1,0 +1,61 @@
+﻿<%@ Master Language="VB" CodeFile="Valmont.master.vb" Inherits="Valmont" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>.::Valomt Sweaters::.</title>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+    <link href="Sources/css/MasterCssClass.css" rel="stylesheet" type="text/css" />
+    <link href="Sources/css/GridStyle.css" rel="stylesheet" type="text/css" />
+    <link href="Sources/css/Title.css" rel="stylesheet" type="text/css" />
+    <link href="Sources/css/ValidatorStyle.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <form id="form1" runat="server">
+    <table style="width: 100%;">
+        <tr>
+            <td>
+                <asp:Image ID="imgHeader" Width="100%" Height="80px" ImageUrl="~/Sources/img/valmontlogo.jpg"
+                    runat="server" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <asp:Menu ID="mnuMain" runat="server" BackColor="#F7F6F3" DynamicHorizontalOffset="2"
+                    Font-Names="Verdana" Font-Size="0.9em" ForeColor="#7C6F57" Orientation="Horizontal"
+                    StaticSubMenuIndent="10px">
+                    <StaticSelectedStyle BackColor="#5D7B9D" />
+                    <StaticMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <DynamicHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <DynamicMenuStyle BackColor="#F7F6F3" />
+                    <DynamicSelectedStyle BackColor="#5D7B9D" />
+                    <DynamicMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <StaticHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <Items>
+                        <asp:MenuItem Text="Administration" Value="Administration">
+                            <asp:MenuItem NavigateUrl="~/frmEmployeeInfo.aspx" Text="Employee Info" Value="EmpInfo">
+                            </asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/frmProductionUnitDefinition.aspx" 
+                            Text="Production Unit Definiton" Value="Production Unit Definiton">
+                        </asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/frmOperatorProductionEntry.aspx" 
+                            Text="Operator Production Entry" Value="Operator Production Entry">
+                        </asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/frmUploadFiles.aspx" Text="Upload Documents" 
+                            Value="UpDoc"></asp:MenuItem>
+                    </Items>
+                </asp:Menu>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                </asp:ContentPlaceHolder>
+            </td>
+        </tr>
+    </table>
+    </form>
+</body>
+</html>

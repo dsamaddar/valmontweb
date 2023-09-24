@@ -1,0 +1,180 @@
+﻿<%@ Master Language="VB" CodeFile="Accounting.master.vb" Inherits="Accounting_Accounting" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1" runat="server">
+    <title>.::Valomt Sweaters::.</title>
+    <style type="text/css">
+        /*Calendar Control CSS*/.MyCalendarCss .ajax__calendar_container
+        {
+            background-color: #DEF1F4;
+            border: solid 1px #77D5F7;
+        }
+        .MyCalendarCss .ajax__calendar_header
+        {
+            background-color: #ffffff;
+            margin-bottom: 4px;
+        }
+        .MyCalendarCss .ajax__calendar_title, .MyCalendarCss .ajax__calendar_next, .MyCalendarCss .ajax__calendar_prev
+        {
+            color: #004080;
+            padding-top: 3px;
+        }
+        .MyCalendarCss .ajax__calendar_body
+        {
+            background-color: #ffffff;
+            border: solid 1px #77D5F7;
+        }
+        .MyCalendarCss .ajax__calendar_dayname
+        {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 4px;
+            margin-top: 2px;
+            color: #004080;
+        }
+        .MyCalendarCss .ajax__calendar_day
+        {
+            color: #004080;
+            text-align: center;
+        }
+        .MyCalendarCss .ajax__calendar_hover .ajax__calendar_day, .MyCalendarCss .ajax__calendar_hover .ajax__calendar_month, .MyCalendarCss .ajax__calendar_hover .ajax__calendar_year, .MyCalendarCss .ajax__calendar_active
+        {
+            color: #004080;
+            font-weight: bold;
+            background-color: #DEF1F4;
+        }
+        .MyCalendarCss .ajax__calendar_today
+        {
+            font-weight: bold;
+        }
+        .MyCalendarCss .ajax__calendar_other, .MyCalendarCss .ajax__calendar_hover .ajax__calendar_today, .MyCalendarCss .ajax__calendar_hover .ajax__calendar_title
+        {
+            color: #bbbbbb;
+        }
+        .modal-inner-wrapper
+        {
+            width: 340px;
+            height: 340px;
+            background-color: Gray;
+        }
+        .modal-inner-wrapper .content
+        {
+            width: 320px;
+            height: 320px;
+            background-color: #FFFFFF;
+            border: solid 1px Gray;
+            z-index: 9999;
+            float: right;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        .modal-inner-wrapper .content .close
+        {
+            float: right;
+        }
+        .modal-inner-wrapper .content .body
+        {
+            margin-top: 20px;
+        }
+        .rounded-corners
+        {
+            /*FOR OTHER MAJOR BROWSERS*/
+            -moz-border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -khtml-border-radius: 5px;
+            border-radius: 5px; /*FOR IE*/
+            behavior: url(border-radius.htc);
+        }
+        .rel
+        {
+            position: relative;
+            z-index: inherit;
+            zoom: 1; /* For IE6 */
+        }
+        .modal-bg
+        {
+            background-color: Gray;
+            filter: alpha(opacity=50);
+            opacity: 0.6;
+            z-index: 999;
+        }
+        .modal
+        {
+            position: absolute;
+        }
+    </style>
+    <link href="../Sources/css/MasterCssClass.css" rel="stylesheet" type="text/css" />
+    <link href="../Sources/css/GridStyle.css" rel="stylesheet" type="text/css" />
+    <link href="../Sources/css/Title.css" rel="stylesheet" type="text/css" />
+    <link href="../Sources/css/ValidatorStyle.css" rel="stylesheet" type="text/css" />
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <table style="width: 100%;">
+        <tr>
+            <td width="10%">
+            </td>
+            <td width="80%">
+                <table style="width: 100%;">
+                    <tr>
+                        <td valign="top" align="left" width="20%">
+                            <asp:Label ID="lblLoggedInUser" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600"></asp:Label>
+                        </td>
+                        <td valign="top" align="center" width="60%">
+                            <asp:Image ID="imgAdminBanner" runat="server" Height="80px" ImageUrl="~/Sources/img/accounting.jpg" />
+                        </td>
+                        <td valign="top" align="right" width="20%">
+                            <asp:LinkButton ID="lnkBtnLogOut" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600">Logout</asp:LinkButton>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td width="10%">
+            </td>
+        </tr>
+        <tr>
+            <td width="10%">
+            </td>
+            <td width="80%">
+                <asp:Menu ID="mnuMain" runat="server" BackColor="#F7F6F3" DynamicHorizontalOffset="2"
+                    Font-Names="Verdana" Font-Size="0.9em" ForeColor="#7C6F57" Orientation="Horizontal"
+                    StaticSubMenuIndent="10px">
+                    <StaticSelectedStyle BackColor="#5D7B9D" />
+                    <StaticMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <DynamicHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <DynamicMenuStyle BackColor="#F7F6F3" />
+                    <DynamicSelectedStyle BackColor="#5D7B9D" />
+                    <DynamicMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <StaticHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <Items>
+                        <asp:MenuItem NavigateUrl="~/Accounting/frmChartOfAccounts.aspx" Text="Chart Of A/C"
+                            Value="Chart Of A/C"></asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/Accounting/frmJVEntry.aspx" Text="JV Entry" Value="JV Entry">
+                        </asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/Accounting/frmJVApproval.aspx" Text="JV Approval" Value="JV Approval">
+                        </asp:MenuItem>
+                    </Items>
+                </asp:Menu>
+            </td>
+            <td width="10%">
+            </td>
+        </tr>
+        <tr>
+            <td width="10%">
+            </td>
+            <td width="80%">
+                <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                </asp:ContentPlaceHolder>
+            </td>
+            <td width="10%">
+            </td>
+        </tr>
+    </table>
+    </form>
+</body>
+</html>

@@ -1,0 +1,372 @@
+﻿Imports System
+Imports System.Data
+Imports System.Data.SqlClient
+Imports System.Data.OleDb
+Imports System.Data.Common
+Imports System.IO
+Imports System.Math
+Imports CommonCode
+Imports System.Configuration
+Imports System.Web.UI
+
+Partial Class Accounting_frmLoadChqLeaf
+    Inherits System.Web.UI.Page
+
+    Dim BankAccountData As New clsBankAccountDataAccess()
+    Dim BankInfoData As clsBankInfoDataAccess = New clsBankInfoDataAccess()
+    Dim ExecutionData As clsExecutionDataAccess = New clsExecutionDataAccess()
+    Dim ChqLeafData As clsLoadChqInfoDataAccess = New clsLoadChqInfoDataAccess()
+
+    Protected Function FormatChqLeafTable() As DataTable
+        Dim dt As DataTable = New DataTable()
+        dt.Columns.Add("ChqLeafID", System.Type.GetType("System.String"))
+        dt.Columns.Add("ChqNo", System.Type.GetType("System.String"))
+        dt.Columns.Add("ReceivedDate", System.Type.GetType("System.DateTime"))
+        dt.Columns.Add("BankID", System.Type.GetType("System.String"))
+        dt.Columns.Add("BankAccountID", System.Type.GetType("System.String"))
+        dt.Columns.Add("AccountNo", System.Type.GetType("System.String"))
+        dt.Columns.Add("ChequeEntryPoint", System.Type.GetType("System.String"))
+        dt.Columns.Add("EntryBy", System.Type.GetType("System.String"))
+        Return dt
+    End Function
+
+    Protected Sub GetCompanyStakeHolderList()
+        drpCompanyList.DataTextField = "Stakeholder"
+        drpCompanyList.DataValueField = "ReferenceID"
+        drpCompanyList.DataSource = BankAccountData.fnSearchStakeholders("", "Company", "")
+        drpCompanyList.DataBind()
+
+        If drpCompanyList.Items.Count >= 0 Then
+            drpCompanyList.SelectedIndex = 0
+            GetBankListByStakeHolder(drpCompanyList.SelectedValue)
+
+            If drpSelectBanInfo.Items.Count >= 0 Then
+                drpSelectBanInfo.SelectedIndex = 0
+                GetBankAccByRefByBank(drpCompanyList.SelectedValue, drpSelectBanInfo.SelectedValue)
+            End If
+        End If
+    End Sub
+
+    Protected Sub GetBankListByStakeHolder(ByVal ReferenceID As String)
+
+        Dim BankAccount As New clsBankAccount()
+        BankAccount.ReferenceID = ReferenceID
+
+        drpSelectBanInfo.DataTextField = "Bank"
+        drpSelectBanInfo.DataValueField = "BankID"
+        drpSelectBanInfo.DataSource = BankAccountData.fnGetBankListByRefID(BankAccount)
+        drpSelectBanInfo.DataBind()
+    End Sub
+
+    Protected Sub GetBankAccByRefByBank(ByVal ReferenceID As String, ByVal BankID As String)
+
+        Dim BankAccount As New clsBankAccount()
+        BankAccount.ReferenceID = ReferenceID
+        BankAccount.BankID = BankID
+
+        drpBankAccounts.DataTextField = "AccountNo"
+        drpBankAccounts.DataValueField = "BankAccountID"
+        drpBankAccounts.DataSource = BankAccountData.fnGetBankAccByRefByBank(BankAccount)
+        drpBankAccounts.DataBind()
+    End Sub
+
+    Protected Sub btnShowSchedule_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnShowSchedule.Click
+
+        btnExecuteChqLeafSchedule.Enabled = True
+
+        Session("ChqLeafInfo") = ""
+
+        Dim dtChqLeafInfo As DataTable = New DataTable()
+        dtChqLeafInfo = FormatChqLeafTable()
+        Session("ChqLeafInfo") = dtChqLeafInfo
+
+        Dim CheNo As Integer = Convert.ToInt32(txtChqLeafStartFrom.Text)
+        Dim NoOfChq As Integer = Convert.ToInt32(txtNoOfChqLeaf.Text)
+        Dim ReceivedDate As DateTime = Convert.ToDateTime(txtChqLeafReceivedDate.Text)
+        Dim Prefix As String = Trim(txtChqLeafPrefix.Text)
+        Dim Suffix As String = Trim(txtChqLeafSuffix.Text)
+
+        Dim LastIDNo As Int64 = ExecutionData.fnGetLastIDFromAppSettings("CurrentChqLeafID")
+        Dim ChequeEntryPoint As String = Now.Date.Day.ToString() + Now.Month.ToString() + Now.Year.ToString() + "-" + Now.Hour.ToString() + Now.Minute.ToString() + Now.Second.ToString() ' + "-" + Now.Ticks.ToString()
+
+        While NoOfChq > 0
+
+            'If (CheckProductLedger() = 0) Then
+            '    Return dtSecurityInfo
+            'End If
+            Dim dr As DataRow
+            dr = dtChqLeafInfo.NewRow()
+            dr("ChqLeafID") = IDGeneration("CHQ-LEAF-", LastIDNo, 8)
+            dr("ChqNo") = Prefix + CheNo.ToString() + Suffix
+            dr("ReceivedDate") = ReceivedDate
+            dr("BankID") = drpSelectBanInfo.SelectedValue
+            dr("BankAccountID") = drpBankAccounts.SelectedValue
+            dr("AccountNo") = drpBankAccounts.SelectedItem.ToString()
+            dr("ChequeEntryPoint") = ChequeEntryPoint
+            dr("EntryBy") = Session("LoginUserID")
+            dtChqLeafInfo.Rows.Add(dr)
+            dtChqLeafInfo.AcceptChanges()
+
+            CheNo += 1
+            LastIDNo += 1
+            NoOfChq -= 1
+
+        End While
+
+        hdFldLastID.Value = LastIDNo.ToString()
+        Session("ChqLeafInfo") = dtChqLeafInfo
+
+        grdChqLeafSchedule.DataSource = dtChqLeafInfo
+        grdChqLeafSchedule.DataBind()
+
+        drpSelectBanInfo.SelectedIndex = -1
+        txtChqLeafPrefix.Text = ""
+        txtChqLeafStartFrom.Text = ""
+        txtNoOfChqLeaf.Text = ""
+        txtChqLeafSuffix.Text = ""
+
+    End Sub
+
+    Protected Sub BulkInsertChqLeafInfo(ByVal dt As DataTable)
+        Using cn As New SqlConnection(ConfigurationManager.ConnectionStrings("AIConnectionString").ConnectionString)
+            cn.Open()
+            Using copy As New SqlBulkCopy(cn)
+                copy.ColumnMappings.Add("ChqLeafID", "ChqLeafID")
+                copy.ColumnMappings.Add("ChqNo", "ChqNo")
+                copy.ColumnMappings.Add("ReceivedDate", "ReceivedDate")
+                copy.ColumnMappings.Add("BankID", "BankID")
+                copy.ColumnMappings.Add("BankAccountID", "BankAccountID")
+                copy.ColumnMappings.Add("ChequeEntryPoint", "ChequeEntryPoint")
+                copy.ColumnMappings.Add("EntryBy", "EntryBy")
+                copy.DestinationTableName = "tblLoadChqLeaf"
+                copy.WriteToServer(dt)
+            End Using
+            cn.Close()
+        End Using
+    End Sub
+
+    Protected Function IDGeneration(ByVal Prefix As String, ByVal LastIDNo As String, ByVal Size As Integer) As String
+        Return Prefix + Replicate("0", Size - Len(LastIDNo)) + LastIDNo
+    End Function
+
+    Private Function Replicate(ByVal str As String, ByVal Times As Int32) As String
+        Replicate = String.Empty
+        For i As Integer = 1 To Times
+            Replicate += str
+        Next
+    End Function
+
+    Protected Sub btnExecuteChqLeafSchedule_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnExecuteChqLeafSchedule.Click
+        Try
+            Dim dtChqLeafInfo As DataTable = New DataTable()
+            dtChqLeafInfo = Session("ChqLeafInfo")
+
+            BulkInsertChqLeafInfo(dtChqLeafInfo)
+            Dim UPDAppSettings As Integer = ExecutionData.fnUpdateLastIDForAppSettings("CurrentChqLeafID", hdFldLastID.Value)
+            MessageBox("Cheque Leaf Inserted.")
+            ClearSelection()
+            btnExecuteChqLeafSchedule.Enabled = False
+            ShowAvailableChqEntryPoint()
+        Catch ex As Exception
+            MessageBox("Error Found.")
+        End Try
+
+
+    End Sub
+
+    Private Sub MessageBox(ByVal strMsg As String)
+        Dim lbl As New System.Web.UI.WebControls.Label
+        lbl.Text = "<script language='javascript'>" & Environment.NewLine _
+                   & "window.alert(" & "'" & strMsg & "'" & ")</script>"
+        Page.Controls.Add(lbl)
+    End Sub
+
+    Protected Sub btnCancelSelection_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnCancelSelection.Click
+        ClearSelection()
+    End Sub
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+        If Not IsPostBack Then
+
+            Dim MenuIDs As String
+
+            MenuIDs = Session("PermittedMenus")
+
+            If InStr(MenuIDs, "LChqLeaf~") = 0 Then
+                Response.Redirect("~\frmAILogin.aspx")
+            End If
+
+            Dim dtChqLeafInfo As DataTable = New DataTable()
+            dtChqLeafInfo = FormatChqLeafTable()
+            Session("ChqLeafInfo") = dtChqLeafInfo
+
+            txtChqLeafReceivedDate.Text = Now.Date
+            btnExecuteChqLeafSchedule.Enabled = False
+            hdFldLastID.Value = "0"
+
+            GetCompanyStakeHolderList()
+            ShowBankInfo()
+            ShowAvailableChqEntryPoint()
+
+            Session("LoginUserID") = "dsamaddar"
+        End If
+    End Sub
+
+    Protected Sub ShowAvailableChqEntryPoint()
+
+        drpSelectChqEntryPoint.DataTextField = "ChequeEntryPoint"
+        drpSelectChqEntryPoint.DataValueField = "ChequeEntryPoint"
+        drpSelectChqEntryPoint.DataSource = ChqLeafData.fnAvailableChqEntryPoint()
+        drpSelectChqEntryPoint.DataBind()
+
+        If drpSelectChqEntryPoint.Items.Count = 1 Then
+            drpSelectBanInfo.SelectedIndex = 0
+            ShowAvailableChqsByChqEntryPoint(drpSelectChqEntryPoint.SelectedValue)
+        End If
+
+    End Sub
+
+    Protected Sub ShowAvailableChqsByChqEntryPoint(ByVal ChequeEntryPoint As String)
+        grdInsertedChqLeafs.DataSource = ChqLeafData.fnAvailableChqsByChqEntryPoint(ChequeEntryPoint)
+        grdInsertedChqLeafs.DataBind()
+    End Sub
+
+    Protected Sub ShowBankInfo()
+        drpSelectBanInfo.DataTextField = "BankName"
+        drpSelectBanInfo.DataValueField = "BankID"
+        drpSelectBanInfo.DataSource = BankInfoData.fnGetBankInfoData()
+        drpSelectBanInfo.DataBind()
+
+        If drpSelectBanInfo.Items.Count > 0 Then
+            drpSelectBanInfo.SelectedIndex = 0
+            ShowAvailableChqsByBankID(drpSelectBanInfo.SelectedValue, drpBankAccounts.SelectedValue)
+        End If
+    End Sub
+
+    Protected Sub ShowAvailableChqsByBankID(ByVal BankID As String, ByVal BankAccountID As String)
+        drpAvailableChqs.DataTextField = "ChqNo"
+        drpAvailableChqs.DataValueField = "ChqLeafID"
+        drpAvailableChqs.DataSource = ChqLeafData.fnAvailableChqLeafsByBankID(BankID, BankAccountID)
+        drpAvailableChqs.DataBind()
+
+    End Sub
+
+    Protected Sub ClearSelection()
+        drpSelectBanInfo.SelectedIndex = -1
+        txtChqLeafPrefix.Text = ""
+        txtChqLeafStartFrom.Text = ""
+        txtNoOfChqLeaf.Text = ""
+        txtChqLeafSuffix.Text = ""
+        txtRemarksForChqVoid.Text = ""
+
+        Session("ChqLeafInfo") = ""
+        grdChqLeafSchedule.DataSource = ""
+        grdChqLeafSchedule.DataBind()
+
+        hdFldLastID.Value = "0"
+
+        ShowBankInfo()
+        ShowAvailableChqEntryPoint()
+
+    End Sub
+
+    Protected Sub grdChqLeafSchedule_RowDataBound(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewRowEventArgs) Handles grdChqLeafSchedule.RowDataBound
+
+        If e.Row.RowType = DataControlRowType.Footer Then
+            e.Row.Cells(2).Text = "( " + grdChqLeafSchedule.Rows.Count.ToString() + " )"
+        End If
+
+    End Sub
+
+    Protected Sub drpSelectBanInfo_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles drpSelectBanInfo.SelectedIndexChanged
+        GetBankAccByRefByBank(drpCompanyList.SelectedValue, drpSelectBanInfo.SelectedValue)
+        ShowAvailableChqsByBankID(drpSelectBanInfo.SelectedValue, drpBankAccounts.SelectedValue)
+    End Sub
+
+    Protected Sub drpSelectChqEntryPoint_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles drpSelectChqEntryPoint.SelectedIndexChanged
+        ShowAvailableChqsByChqEntryPoint(drpSelectChqEntryPoint.SelectedValue)
+        chkSelectAllAvailableChqs.Checked = False
+        chkSelectAllAvailableChqs.Text = "Select All"
+    End Sub
+
+    Protected Sub grdInsertedChqLeafs_RowDataBound(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewRowEventArgs) Handles grdInsertedChqLeafs.RowDataBound
+
+        If grdInsertedChqLeafs.Rows.Count >= 0 Then
+            e.Row.Cells(1).Visible = False
+        End If
+
+        If e.Row.RowType = DataControlRowType.Footer Then
+            e.Row.Cells(2).Text = "Total :"
+            e.Row.Cells(3).Text = "( " + grdInsertedChqLeafs.Rows.Count.ToString() + ")"
+        End If
+
+    End Sub
+
+    Protected Sub btnVoidChq_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnVoidChq.Click
+
+        Dim chk As System.Web.UI.WebControls.CheckBox = New System.Web.UI.WebControls.CheckBox()
+        Dim lbl As System.Web.UI.WebControls.Label = New System.Web.UI.WebControls.Label()
+        Dim CountSelectedChq As Integer = 0
+
+        Dim ChqLeafID As String = ""
+        For Each dr As GridViewRow In grdInsertedChqLeafs.Rows
+            chk = dr.FindControl("chkSelectInsertedChqs")
+            lbl = dr.FindControl("lblChqLeafID")
+            If chk.Checked = True Then
+                ChqLeafID = ChqLeafID + Trim(lbl.Text) + "~|"
+                CountSelectedChq += 1
+            End If
+
+        Next
+
+        Dim ChqLeafInfo As clsLoadChqInfo = New clsLoadChqInfo()
+        ChqLeafInfo.ChequeEntryPoint = drpSelectChqEntryPoint.SelectedValue
+        ChqLeafInfo.ChqVoidBy = Session("LoginUserID")
+        ChqLeafInfo.ChqVoidRemarks = txtRemarksForChqVoid.Text
+        ChqLeafInfo.ChqLeafIDList = ChqLeafID
+
+        Dim check As Integer = ChqLeafData.fnVoidChqInfo(ChqLeafInfo)
+
+        If check = 1 Then
+            MessageBox("( " + CountSelectedChq.ToString() + " ) " + " Chq. Void Successful.")
+            ClearSelection()
+        Else
+            MessageBox("Error Found.")
+        End If
+
+    End Sub
+
+    Protected Sub chkSelectAllAvailableChqs_CheckedChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles chkSelectAllAvailableChqs.CheckedChanged
+
+        Dim chk As System.Web.UI.WebControls.CheckBox = New System.Web.UI.WebControls.CheckBox()
+
+        If chkSelectAllAvailableChqs.Checked = True Then
+            chkSelectAllAvailableChqs.Text = "De Select All"
+
+            For Each dr As GridViewRow In grdInsertedChqLeafs.Rows
+                chk = dr.FindControl("chkSelectInsertedChqs")
+                chk.Checked = True
+            Next
+        Else
+            chkSelectAllAvailableChqs.Text = "Select All"
+            For Each dr As GridViewRow In grdInsertedChqLeafs.Rows
+                chk = dr.FindControl("chkSelectInsertedChqs")
+                chk.Checked = False
+            Next
+        End If
+    End Sub
+
+    Protected Sub drpCompanyList_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles drpCompanyList.SelectedIndexChanged
+        GetBankListByStakeHolder(drpCompanyList.SelectedValue)
+
+        If drpSelectBanInfo.Items.Count >= 0 Then
+            drpSelectBanInfo.SelectedIndex = 0
+            GetBankAccByRefByBank(drpCompanyList.SelectedValue, drpSelectBanInfo.SelectedValue)
+        End If
+    End Sub
+
+    Protected Sub drpBankAccounts_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles drpBankAccounts.SelectedIndexChanged
+        ShowAvailableChqsByBankID(drpSelectBanInfo.SelectedValue, drpBankAccounts.SelectedValue)
+    End Sub
+
+End Class

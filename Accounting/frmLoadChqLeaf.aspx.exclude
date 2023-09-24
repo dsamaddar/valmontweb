@@ -1,0 +1,432 @@
+<%@ Page Language="VB" MasterPageFile="~/Accounting/Accounting.master" Theme="CommonSkin" AutoEventWireup="false"
+    CodeFile="frmLoadChqLeaf.aspx.vb" Inherits="Accounting_frmLoadChqLeaf" Title=".:SDD::Load Cheque Leaf:." %>
+
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="cc1" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="Server">
+    <link href="../CSS/UltraCssClass.css" rel="stylesheet" type="text/css" />
+    <table style="width: 100%;">
+        <tr align="center">
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td>
+                <asp:Panel ID="pnlChqLeafSchedule" runat="server" Width="700px" SkinID="pnlInner"
+                    CssClass="style3">
+                    <table style="width: 100%;">
+                        <tr align="left">
+                            <td colspan="4">
+                                <div class="widgettitle">
+                                    Load Cheque Leaf<asp:ScriptManager ID="ScriptManager1" runat="server">
+                                    </asp:ScriptManager>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td style="width: 20px">
+                            </td>
+                            <td style="width: 150px" class="label">
+                                Select Company
+                            </td>
+                            <td>
+                                <asp:DropDownList ID="drpCompanyList" runat="server" Width="200px" CssClass="InputTxtBox"
+                                    AutoPostBack="True">
+                                </asp:DropDownList>
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td class="label">
+                            </td>
+                            <td class="label">
+                                Select Bank :
+                            </td>
+                            <td>
+                                <asp:DropDownList ID="drpSelectBanInfo" runat="server" CssClass="InputTxtBox" Width="200px"
+                                    AutoPostBack="True">
+                                </asp:DropDownList>
+                                &nbsp;<asp:RequiredFieldValidator ID="reqFldBankInfo" runat="server" ControlToValidate="drpSelectBanInfo"
+                                    ErrorMessage="*" ValidationGroup="ChqLeaf"></asp:RequiredFieldValidator></td>
+                            <td>
+                                <asp:DropDownList ID="drpAvailableChqs" runat="server" CssClass="InputTxtBox" Width="180px">
+                                </asp:DropDownList>
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td class="label">
+                                &nbsp;
+                            </td>
+                            <td class="label">
+                                Account No
+                            </td>
+                            <td>
+                                <asp:DropDownList ID="drpBankAccounts" runat="server" CssClass="InputTxtBox" 
+                                    Width="200px" AutoPostBack="True">
+                                </asp:DropDownList>
+                                &nbsp;<asp:RequiredFieldValidator ID="reqFldBankAccounts" runat="server" ControlToValidate="drpBankAccounts"
+                                    ErrorMessage="*" ValidationGroup="ChqLeaf"></asp:RequiredFieldValidator></td>
+                            <td>
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td class="label">
+                            </td>
+                            <td class="label">
+                                Chq Leaf Prefix :
+                            </td>
+                            <td class="style1">
+                                <asp:TextBox ID="txtChqLeafPrefix" runat="server" CssClass="InputTxtBox"></asp:TextBox>
+                                &nbsp;
+                            </td>
+                            <td class="style1">
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td class="label">
+                            </td>
+                            <td class="label">
+                                Chq Leaf Start From :
+                            </td>
+                            <td class="style2">
+                                <asp:TextBox ID="txtChqLeafStartFrom" runat="server" CssClass="InputTxtBox" ValidationGroup="ChqLeaf"></asp:TextBox>
+                                &nbsp;<asp:RequiredFieldValidator ID="reqFldChqLeafStartsFrom" runat="server" ControlToValidate="txtChqLeafStartFrom"
+                                    ErrorMessage="*" ValidationGroup="ChqLeaf"></asp:RequiredFieldValidator></td>
+                            <td class="style2">
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td class="label">
+                            </td>
+                            <td class="label">
+                                No Of Leaf
+                            </td>
+                            <td>
+                                <asp:TextBox ID="txtNoOfChqLeaf" runat="server" CssClass="InputTxtBox" ValidationGroup="ChqLeaf"
+                                    Width="50px"></asp:TextBox>
+                                &nbsp;<asp:RequiredFieldValidator ID="reqFldNoOfChqLeaf" runat="server" ControlToValidate="txtNoOfChqLeaf"
+                                    ErrorMessage="*" ValidationGroup="ChqLeaf"></asp:RequiredFieldValidator>&nbsp;&nbsp;<asp:RegularExpressionValidator
+                                        ID="regExpNoOfLeaf" runat="server" ControlToValidate="txtNoOfChqLeaf" ErrorMessage="Invalid Numeric"
+                                        ValidationExpression="^[-+]?[0-9]{1,7}" ValidationGroup="ChqLeaf"></asp:RegularExpressionValidator></td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td class="label">
+                            </td>
+                            <td class="label">
+                                Chq. Leaf Suffix :
+                            </td>
+                            <td>
+                                <asp:TextBox ID="txtChqLeafSuffix" runat="server" CssClass="InputTxtBox"></asp:TextBox>
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td class="label">
+                            </td>
+                            <td class="label">
+                                Receiving Date :
+                            </td>
+                            <td>
+                                <asp:TextBox ID="txtChqLeafReceivedDate" runat="server" CssClass="InputTxtBox" ValidationGroup="ChqLeaf"></asp:TextBox>
+                                <cc1:CalendarExtender ID="txtChqLeafReceivedDate_CalendarExtender" runat="server"
+                                    Enabled="True" TargetControlID="txtChqLeafReceivedDate">
+                                </cc1:CalendarExtender>
+                                &nbsp;<asp:RequiredFieldValidator ID="reqFldReceivingDate" runat="server" ControlToValidate="txtChqLeafReceivedDate"
+                                    ErrorMessage="*" ValidationGroup="ChqLeaf"></asp:RequiredFieldValidator></td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr align="left">
+                            <td>
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                            <td>
+                                <asp:Button ID="btnShowSchedule" runat="server" CssClass="styled-button-1" Text="Generate Schedule"
+                                    ValidationGroup="ChqLeaf" />
+                                &nbsp;<asp:HiddenField ID="hdFldLastID" runat="server" />
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                    </table>
+                </asp:Panel>
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+        </tr>
+        <tr align="center">
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td>
+                <asp:Panel ID="pnlChqLeafCart" runat="server" Width="700px" SkinID="pnlInner">
+                    <div style="max-height: 400px; max-width: 100%; overflow: auto">
+                        <asp:GridView ID="grdChqLeafSchedule" runat="server" EmptyDataText="No Data Available"
+                            AutoGenerateColumns="False" CssClass="mGrid">
+                            <Columns>
+                                <asp:TemplateField HeaderText="ChqLeafID" Visible="false">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox1" runat="server"></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label1" runat="server" Text='<%# Eval("ChqLeafID") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="ChqNo">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox2" runat="server"></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label2" runat="server" Text='<%# Eval("ChqNo") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="ReceivedDate">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox3" runat="server"></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label3" runat="server" Text='<%# Eval("ReceivedDate") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="BankID" Visible="False">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox4" runat="server"></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label4" runat="server" Text='<%# Eval("BankID") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="BankAccountID" Visible="False">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox7" runat="server" Text='<%# Bind("BankAccountID") %>'></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label7" runat="server" Text='<%# Bind("BankAccountID") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="AccountNo">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox8" runat="server" Text='<%# Bind("AccountNo") %>'></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label8" runat="server" Text='<%# Bind("AccountNo") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="ChequeEntryPoint" Visible="True">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox6" runat="server"></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label6" runat="server" Text='<%# Eval("ChequeEntryPoint") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                                <asp:TemplateField HeaderText="EntryBy" Visible="false">
+                                    <EditItemTemplate>
+                                        <asp:TextBox ID="TextBox5" runat="server"></asp:TextBox>
+                                    </EditItemTemplate>
+                                    <ItemTemplate>
+                                        <asp:Label ID="Label5" runat="server" Text='<%# Eval("EntryBy") %>'></asp:Label>
+                                    </ItemTemplate>
+                                </asp:TemplateField>
+                            </Columns>
+                        </asp:GridView>
+                    </div>
+                </asp:Panel>
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+        </tr>
+        <tr align="center">
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td>
+                <asp:Panel ID="pnlChqLeafExecution" runat="server" Width="700px" SkinID="pnlInner"
+                    CssClass="style3">
+                    <table style="width: 100%;">
+                        <tr align="center">
+                            <td>
+                                &nbsp;
+                            </td>
+                            <td>
+                                <asp:Button ID="btnExecuteChqLeafSchedule" runat="server" Text="Execute" CssClass="styled-button-1"
+                                    OnClientClick="if (!confirm('Are you Sure to Execute ?')) return false" />
+                                &nbsp;<asp:Button ID="btnCancelSelection" runat="server" Text="Cancel" CssClass="styled-button-1" />
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                    </table>
+                </asp:Panel>
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+        </tr>
+        <tr>
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+        </tr>
+        <tr align="center">
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td>
+                <asp:Panel ID="pnlChqEntryPoint" runat="server" Width="700px" SkinID="pnlInner" CssClass="style3">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td>
+                                &nbsp;
+                            </td>
+                            <td class="label" align="left">
+                                Select Cheque Entry Point :
+                            </td>
+                            <td align="left">
+                                <asp:DropDownList CssClass="InputTxtBox" ID="drpSelectChqEntryPoint" runat="server"
+                                    AutoPostBack="True" Width="180px">
+                                </asp:DropDownList>
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                &nbsp;
+                            </td>
+                            <td colspan="2">
+                                <div style="max-height: 400px; max-width: 100%; overflow: auto">
+                                    <asp:GridView ID="grdInsertedChqLeafs" runat="server" 
+                                        AutoGenerateColumns="False" CssClass="mGrid">
+                                        <Columns>
+                                            <asp:TemplateField HeaderText="Select">
+                                                <EditItemTemplate>
+                                                    <asp:CheckBox ID="CheckBox1" runat="server" />
+                                                </EditItemTemplate>
+                                                <ItemTemplate>
+                                                    <asp:CheckBox ID="chkSelectInsertedChqs" runat="server" />
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="ChqLeafID">
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox1" runat="server"></asp:TextBox>
+                                                </EditItemTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblChqLeafID" runat="server" Text='<%# Eval("ChqLeafID") %>'></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="ChqNo">
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox2" runat="server"></asp:TextBox>
+                                                </EditItemTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label2" runat="server" Text='<%# Eval("ChqNo") %>'></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="ReceivedDate">
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox3" runat="server"></asp:TextBox>
+                                                </EditItemTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label3" runat="server" Text='<%# Eval("ReceivedDate") %>'></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="BankName">
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox4" runat="server"></asp:TextBox>
+                                                </EditItemTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label4" runat="server" Text='<%# Eval("BankName") %>'></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="AccountNo">
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox5" runat="server" Text='<%# Bind("AccountNo") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label1" runat="server" Text='<%# Bind("AccountNo") %>'></asp:Label>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                        </Columns>
+                                    </asp:GridView>
+                                </div>
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                &nbsp;
+                            </td>
+                            <td align="left">
+                                <asp:CheckBox ID="chkSelectAllAvailableChqs" CssClass="chkText" Text="Select All"
+                                    runat="server" AutoPostBack="True" />
+                            </td>
+                            <td align="left">
+                                <asp:TextBox ID="txtRemarksForChqVoid" runat="server" CssClass="InputTxtBox" TextMode="MultiLine"
+                                    Width="200px"></asp:TextBox>
+                                &nbsp;<asp:RequiredFieldValidator ID="reqFldRemarksForChqVoid" runat="server" ControlToValidate="txtRemarksForChqVoid"
+                                    ErrorMessage="*" ValidationGroup="ChqVoid"></asp:RequiredFieldValidator></td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                &nbsp;
+                            </td>
+                            <td align="left">
+                                &nbsp;
+                            </td>
+                            <td align="left">
+                                <asp:Button ID="btnVoidChq" runat="server" CssClass="styled-button-1" Text="Void Selected"
+                                    ValidationGroup="ChqVoid" OnClientClick="if (!confirm('Are you Sure to Void Selected Chqs. ?')) return false" />
+                            </td>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                    </table>
+                </asp:Panel>
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+        </tr>
+        <tr>
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+            <td class="style3">
+                &nbsp;
+            </td>
+        </tr>
+    </table>
+</asp:Content>

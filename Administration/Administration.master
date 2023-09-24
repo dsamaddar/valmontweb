@@ -1,0 +1,102 @@
+﻿<%@ Master Language="VB" CodeFile="Administration.master.vb" Inherits="Valmont" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>.::Valomt Sweaters::.</title>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+    <link href="../Sources/css/MasterCssClass.css" rel="stylesheet" type="text/css" />
+    <link href="../Sources/css/GridStyle.css" rel="stylesheet" type="text/css" />
+    <link href="../Sources/css/Title.css" rel="stylesheet" type="text/css" />
+    <link href="../Sources/css/ValidatorStyle.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <form id="form1" runat="server">
+    <table style="width: 100%;">
+        <tr>
+            <td>
+                <table style="width: 100%;">
+                    <tr>
+                        <td valign="top" align="left" width="10%">
+                            <asp:Label ID="lblLoggedInUser" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600"></asp:Label>
+                        </td>
+                        <td valign="top" align="center" width="80%">
+                            <asp:Image ID="imgAdminBanner" runat="server" Height="80px" ImageUrl="~/Sources/img/admin_banner.jpg" />
+                        </td>
+                        <td valign="top" align="right" width="10%">
+                            <asp:LinkButton ID="lnkBtnLogOut" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600">Logout</asp:LinkButton>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <asp:Menu ID="mnuAdmin" runat="server" BackColor="#F7F6F3" DynamicHorizontalOffset="2"
+                    Font-Names="Verdana" Font-Size="0.9em" ForeColor="#7C6F57" Orientation="Horizontal"
+                    StaticSubMenuIndent="10px">
+                    <StaticSelectedStyle BackColor="#5D7B9D" />
+                    <StaticMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <DynamicHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <DynamicMenuStyle BackColor="#F7F6F3" />
+                    <DynamicSelectedStyle BackColor="#5D7B9D" />
+                    <DynamicMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <StaticHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <Items>
+                        <asp:MenuItem Text="Administration" Value="adm_dashboard">
+                            <asp:MenuItem NavigateUrl="~/Administration/frmEmployeeInfo.aspx" Text="Employee Info"
+                                Value="adm_empinfo"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Administration/frmReactivateEmployee.aspx" 
+                                Text="Employee Reactivation" Value="adm_empreactivate"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Administration/frmSectionSettings.aspx" Text="Section Settings"
+                                Value="adm_secsettings"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Administration/frmDesignation.aspx" Text="Designation Settings"
+                                Value="adm_designationsett"></asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/Administration/frmPrintEmpIDCard.aspx" Text="Print ID Card"
+                            Value="adm_printidcard"></asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/Administration/frmUploadFiles.aspx" Text="Upload Documents"
+                            Value="adm_updocuments"></asp:MenuItem>
+                        <asp:MenuItem Text="Production" Value="adm_productionmgt">
+                            <asp:MenuItem NavigateUrl="~/Administration/frmRateSetup.aspx" 
+                                Text="Rate Setup" Value="adm_ratesetup"></asp:MenuItem>
+                            <asp:MenuItem Text="Buyer Entry" Value="adm_buyerentry" 
+                                NavigateUrl="~/Administration/frmBuyerEntry.aspx"></asp:MenuItem>
+                            <asp:MenuItem Text="Style Entry" Value="adm_styleentry" 
+                                NavigateUrl="~/Administration/frmStyleEntry.aspx"></asp:MenuItem>
+                            <asp:MenuItem Text="Size Entry" Value="adm_sizeentry" 
+                                NavigateUrl="~/Administration/frmSizeEntry.aspx"></asp:MenuItem>
+                            <asp:MenuItem Text="Color Entry" Value="adm_colorentry" 
+                                NavigateUrl="~/Administration/frmColorEntry.aspx"></asp:MenuItem>
+                            <asp:MenuItem Text="Component Entry" Value="adm_componententry" 
+                                NavigateUrl="~/Administration/frmComponentEntry.aspx"></asp:MenuItem>
+                            <asp:MenuItem Text="Order Entry" Value="adm_orderentry" 
+                                NavigateUrl="~/Administration/frmOrderEntry.aspx"></asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem Text="Salary Management" Value="adm_salarymgt">
+                            <asp:MenuItem NavigateUrl="~/Administration/frmSalarySetup.aspx" 
+                                Text="Salary Setup" Value="adm_salarysetup"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Administration/frmProcessSalary.aspx" 
+                                Text="Process Salary" Value="adm_salaryprocess"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Administration/frmSalaryReport.aspx" 
+                                Text="Salary Report" Value="adm_salaryreport"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Administration/frmSalaryReversal.aspx" 
+                                Text="Salary Reversal" Value="adm_salaryreversal"></asp:MenuItem>
+                        </asp:MenuItem>
+                    </Items>
+                </asp:Menu>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                </asp:ContentPlaceHolder>
+            </td>
+        </tr>
+    </table>
+    </form>
+</body>
+</html>

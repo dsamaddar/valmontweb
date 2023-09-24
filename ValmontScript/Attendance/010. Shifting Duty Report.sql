@@ -1,0 +1,425 @@
+
+
+Create table tblShifts(
+ShiftID nvarchar(50) primary key,
+ShiftName nvarchar(50) unique(ShiftName),
+ShiftLogStarts nvarchar(50),
+ShiftLogEnds nvarchar(50)
+);
+
+GO
+
+alter function fnGetAttForShifting(@EmployeeID nvarchar(50),@Year int,@Month int)
+returns @Att table(
+EmployeeID nvarchar(50),
+EmployeeName nvarchar(50),
+Designation nvarchar(50),
+Section nvarchar(50),
+MachineNo nvarchar(50),
+CardNo nvarchar(20),
+JoiningDate date,
+AttDate date,
+AttDay varchar(10),
+AttStatus varchar(20),
+InTime datetime,
+OutTime datetime,
+OverTimeHours int default 0,
+OTHr int default 0,
+OTMin int default 0,
+LateHours int default 0,
+LTHr int default 0,
+LTMin int default 0,
+TotalLateIn int default 0,
+TotalLeave int default 0,
+TotalAbsent int default 0,
+TotalHoliday int default 0,
+HalfAbsent numeric(5,2) default 0
+)
+as
+begin
+	
+	Declare @StartDate date;
+	Declare @InterimDate date 
+	Declare @EndDate date;
+	Declare @eom date;
+
+	if exists(select * from tbl_job_card_rpt_dt_range where rpt_year=@year and rpt_month=@month)
+	begin
+		select @StartDate = rpt_dt_starts,@EndDate = rpt_dt_ends from tbl_job_card_rpt_dt_range where rpt_year=@year and rpt_month=@month;
+		Set @eom = @EndDate;
+	end
+	else
+	begin
+		Set @StartDate = convert(nvarchar,@month)+'/01/'+convert(nvarchar,@year);
+		Set @EndDate = EOMONTH(@StartDate);
+		Set @eom = EOMONTH(@StartDate);
+	end
+
+	Declare @RawAtt as table(
+	SLNO Int identity(1,1),
+	LogTime datetime,
+	ShiftID nvarchar(50),
+	Taken bit default 0
+	);
+
+	Insert Into @RawAtt(LogTime,ShiftID)
+	Select LogTime,ShiftID from tblUserAttendance Where EmployeeID = @EmployeeID and LogTime between @StartDate and DATEADD(DAY,1,@EndDate)
+	And AuthStatus='A'
+	order by LogTime
+
+	Declare @LogInTime as datetime
+	Declare @LogOutTime as datetime
+	Declare @SSLNO as int
+	Declare @SLNO as int
+	Declare @Count as int Set @Count = 1
+	Declare @NCount as int Set @NCount = 0
+	Declare @Active as int Set @Active = 0
+
+	Declare @EmployeeName as nvarchar(50) Set @EmployeeName = ''
+	Declare @Designation as nvarchar(50) Set @Designation = ''
+	Declare @SectionIDCom as nvarchar(50) Set @SectionIDCom = ''
+	Declare @Section as nvarchar(50) Set @Section = ''
+	Declare @MachineNo as nvarchar(50) Set @MachineNo = ''
+	Declare @CardNo as nvarchar(50) Set @CardNo = ''
+	Declare @JoiningDate as date
+	Declare @AttStatus as varchar(20) Set @AttStatus = ''
+	Declare @OTHours as int Set @OTHours = 0
+	Declare @LateHours as int Set @LateHours = 0
+	Declare @HalfAbsent as numeric(5,2) Set @HalfAbsent = 0
+	Declare @TotalLateIn as int Set @TotalLateIn = dbo.fnCountLateIn(@EmployeeID,@Year,@Month)
+	Declare @TotalLeave as int Set @TotalLeave = dbo.fnCountOnLeave(@EmployeeID,@Year,@Month)
+	Declare @TotalAbsent as int Set @TotalAbsent = dbo.fnCountAbsent(@EmployeeID,@Year,@Month)
+	Declare @TotalHoliday as int Set @TotalHoliday = dbo.fnCountHolidays(@year,@month)
+
+	Declare @ShiftID nvarchar(50)
+	Declare @IdealLogInTime datetime
+	Declare @IdealLogOutTime datetime
+	Declare @ShiftLogStarts nvarchar(50)
+	Declare @ShiftLogEnds nvarchar(50)
+
+	Select @EmployeeName=EmployeeName,@Designation=Designation,@Section=ISNULL(Section,'N\A'),
+	@MachineNo=MachineNo,@CardNo=CardNo,@JoiningDate=JoiningDate
+	From vwEmployeeDetails E
+	Where E.EmployeeID=@EmployeeID
+
+	Select @NCount = Count(*) from @RawAtt
+	Select @Active = Count(*) from @RawAtt Where Taken=0
+
+	While @Active > 0
+	begin
+
+		Select Top 1 @SSLNO=SLNO,@LogInTime=LogTime,@ShiftID=ShiftID from @RawAtt Where Taken=0 order by LogTime
+
+		--select @IdealLogInTime=Convert(datetime,Convert(nvarchar,Convert(nvarchar,@LogInTime,101)) + ' ' + ShiftLogStarts) from tblShifts Where ShiftID=@ShiftID
+		Set @OTHours =0;
+		IF Convert(nvarchar,@LogInTime,106) = convert(nvarchar,@eom,106) AND RIGHT(CONVERT(VARCHAR(26),@LogInTime,109),2)='PM'
+		begin
+			Declare @testIdealLogOutTime  datetime 
+			Select Top 1 @LogOutTime=dbo.fnGetComplianceOutTime(LogTime),@ShiftID=ShiftID,@testIdealLogOutTime=IdealLogOutTime
+			from tblUserAttendance   
+			Where EmployeeID = @EmployeeID And convert(nvarchar,LogTime,106) = convert(nvarchar,DATEADD(DAY,1,EOMONTH(@LogInTime)),106) And AuthStatus='A'
+			order by LogTime
+
+			Set @OTHours = DATEDIFF(MINUTE,@testIdealLogOutTime,@LogOutTime)
+		end	
+		else
+		begin
+			Select Top 1 @SLNO=SLNO,@LogOutTime=dbo.fnGetComplianceOutTime(LogTime),@ShiftID=ShiftID from @RawAtt Where Taken=0 And LogTime > @LogInTime  order by LogTime
+		end
+				
+		--select @IdealLogInTime=Convert(datetime,Convert(nvarchar,Convert(nvarchar,@LogOutTime,101)) + ' ' + ShiftLogEnds) from tblShifts Where ShiftID=@ShiftID
+
+		Set @AttStatus = dbo.fnGetAttStatus(@EmployeeID,Convert(nvarchar,@LogInTime,101))
+		If @OTHours <= 0
+		begin
+			Set @OTHours = dbo.fnMeasureOTHrsComShifting(@EmployeeID,@LogOutTime)
+		end
+
+		if @OTHours < 0
+				Set @OTHours = 0
+		Set @LateHours = dbo.fnMeasureLateHrs(@EmployeeID,@LogInTime)
+		Set @HalfAbsent = dbo.fnCountHalfAbsentShifting(@EmployeeID,@LogInTime) * 0.5
+
+		Insert Into @Att(EmployeeID,EmployeeName,Designation,Section,MachineNo,CardNo,JoiningDate,AttDate,AttDay,
+		AttStatus,InTime,OutTime,OverTimeHours,OTHr,OTMin,LateHours,LTHr,LTMin,TotalLateIn,TotalAbsent,HalfAbsent,TotalLeave,TotalHoliday)
+		Values(@EmployeeID,@EmployeeName,@Designation,@Section,@MachineNo,@CardNo,@JoiningDate,Convert(nvarchar,@LogInTime,101),DATENAME(WEEKDAY,@LogInTime),
+		@AttStatus,@LogInTime,@LogOutTime,@OTHours,@OTHours/60,@OTHours%60,@LateHours,@LateHours/60,@LateHours%60,@TotalLateIn,@TotalAbsent,@HalfAbsent,@TotalLeave,@TotalHoliday)
+
+		Update @RawAtt Set Taken=1 Where SLNO=@SSLNO
+		Update @RawAtt Set Taken=1 Where SLNO=@SLNO
+		Select @Active = Count(*) from @RawAtt Where Taken=0;
+	end
+
+	Set @InterimDate = @StartDate
+	While @InterimDate <= @EndDate
+	begin
+		
+		if not exists(Select * from @Att Where convert(nvarchar,AttDate,101)=convert(nvarchar,@InterimDate,101))
+		begin
+
+			Set @AttStatus = dbo.fnGetAttStatus(@EmployeeID,Convert(nvarchar,@InterimDate,101))
+
+			if exists (select * from tblLeaveDetails where LeaveDate=Convert(nvarchar,@InterimDate,101) and EmployeeID=@EmployeeID)
+			begin
+				set @AttStatus = 'on Leave'
+			end
+
+			Insert Into @Att(EmployeeID,EmployeeName,Designation,Section,MachineNo,CardNo,JoiningDate,AttDate,AttDay,
+			AttStatus,TotalAbsent,HalfAbsent,TotalLeave,TotalHoliday)
+			Values(@EmployeeID,@EmployeeName,@Designation,@Section,@MachineNo,@CardNo,@JoiningDate,Convert(nvarchar,@InterimDate,101),DATENAME(WEEKDAY,@InterimDate),
+			@AttStatus,@TotalAbsent,@HalfAbsent,@TotalLeave,@TotalHoliday)
+		end
+
+		Set @InterimDate = DATEADD(DAY,1,@InterimDate)
+	end
+
+	Declare @RptAbsentCount as int Set @RptAbsentCount = 0
+
+	
+
+	Update @Att Set InTime=NULL,OutTime=NULL,OverTimeHours=NULL,OTHr=NULL,OTMin=NULL,LateHours=NULL,LTHr=NULL,
+	LTMin=NULL,AttStatus='Weekend',HalfAbsent=0
+	Where AttDay='Friday' and AttDate <= '2022-08-16'  and AttDate not in (select ExceptionDate from tblExceptions)
+
+	Update @Att Set InTime=NULL,OutTime=NULL,OverTimeHours=NULL,OTHr=NULL,OTMin=NULL,LateHours=NULL,LTHr=NULL,
+	LTMin=NULL,AttStatus='Weekend',HalfAbsent=0
+	Where AttDay='Wednesday' and AttDate > '2022-08-16' and AttDate not in (select ExceptionDate from tblExceptions)
+
+	Update @Att Set AttStatus = c.Remarks
+	from @Att a inner join tblCompensatoryLeave c on a.AttDate = c.CompensatoryDate
+	where a.AttDate in (select CompensatoryDate from tblCompensatoryLeave)
+
+	Update @Att Set AttStatus='Absent' Where InTime is null and OutTime is null 
+	and (AttStatus like '%Regular%' or AttStatus like '%Late%');
+
+	select @RptAbsentCount=Count(*) from @Att where AttStatus='Absent';
+	Update @Att Set TotalAbsent=@RptAbsentCount;
+
+	return;
+end
+
+GO
+
+-- SELECT RIGHT(CONVERT(VARCHAR(26),GETDATE(),109),2)
+
+
+GO
+
+select * from tblEmployeeInfo where EmpCode = '13399'
+-- exec spReportEmpJobCardShifting 'EMP-00001560','ALL',2022,4
+
+alter proc spReportEmpJobCardShifting
+@EmployeeID nvarchar(50),
+@SectionID nvarchar(50),
+@year int,
+@month int
+as
+begin
+	
+	Declare @EmpID as nvarchar(50)
+	Declare @EmployeeIDParam as nvarchar(50)
+	Declare @SectionIDParam as nvarchar(50)
+
+	If @EmployeeID = 'ALL'
+		Set @EmployeeIDParam = '%';
+	else
+		Set @EmployeeIDParam = '%'+ @EmployeeID +'%';
+
+	If @SectionID = 'ALL'
+		Set @SectionIDParam = '%';
+	else
+		Set @SectionIDParam = '%'+ @SectionID +'%';
+	
+	Declare @Count as int Set @Count=1;
+	Declare @NCount as int Set @NCount=0;
+	Declare @SLNO as int Set @SLNO=0;
+
+	Declare @Att as table(
+	EmployeeID nvarchar(50),
+	EmployeeName nvarchar(50),
+	Designation nvarchar(50),
+	Section nvarchar(50),
+	MachineNo nvarchar(50),
+	CardNo nvarchar(20),
+	JoiningDate date,
+	AttDate date,
+	AttDay varchar(10),
+	AttStatus varchar(20),
+	InTime datetime,
+	OutTime datetime,
+	OverTimeHours int,
+	OTHr int,
+	OTMin int,
+	LateHours int,
+	LTHr int,
+	LTMin int,
+	TotalLateIn int,
+	TotalLeave int,
+	TotalAbsent int,
+	TotalHoliday int,
+	HalfAbsent numeric(5,2)
+	)
+
+	Declare @EmpTbl as table(
+	SLNO int identity(1,1),
+	EmployeeID nvarchar(50),
+	Taken bit default 0
+	);
+
+	Insert Into @EmpTbl(EmployeeID)
+	Select EmployeeID from tblEmployeeInfo E INNER JOIN tblSection S ON E.SectionID=S.SectionID
+	Where E.EmployeeID like @EmployeeIDParam And E.SectionID like @SectionIDParam
+	And E.IsActive=1 And S.IsSpecial=1
+
+	Select @NCount=Count(*) from @EmpTbl;
+
+	While @Count <= @NCount
+	begin
+		Select top 1 @SLNO=SLNO,@EmpID=EmployeeID from @EmpTbl Where Taken=0;
+
+		Insert Into @Att
+		Select * from dbo.fnGetAttForShifting(@EmpID,@year,@month) order by convert(date,AttDate)
+
+		Update @EmpTbl Set Taken=1 Where SLNO=@SLNO;
+		Set @Count += 1;
+	end
+	
+	select * from @Att order by EmployeeID,convert(date,AttDate);
+end
+
+GO
+
+
+alter proc spReportInActiveEmpJobCardShifting
+@EmployeeID nvarchar(50),
+@SectionID nvarchar(50),
+@year int,
+@month int
+as
+begin
+	
+	Declare @EmpID as nvarchar(50)
+	Declare @EmployeeIDParam as nvarchar(50)
+	Declare @SectionIDParam as nvarchar(50)
+
+	If @EmployeeID = 'ALL'
+		Set @EmployeeIDParam = '%';
+	else
+		Set @EmployeeIDParam = '%'+ @EmployeeID +'%';
+
+	If @SectionID = 'ALL'
+		Set @SectionIDParam = '%';
+	else
+		Set @SectionIDParam = '%'+ @SectionID +'%';
+	
+	Declare @Count as int Set @Count=1;
+	Declare @NCount as int Set @NCount=0;
+	Declare @SLNO as int Set @SLNO=0;
+
+	Declare @Att as table(
+	EmployeeID nvarchar(50),
+	EmployeeName nvarchar(50),
+	Designation nvarchar(50),
+	Section nvarchar(50),
+	MachineNo nvarchar(50),
+	CardNo nvarchar(20),
+	JoiningDate date,
+	AttDate date,
+	AttDay varchar(10),
+	AttStatus varchar(10),
+	InTime datetime,
+	OutTime datetime,
+	OverTimeHours int,
+	OTHr int,
+	OTMin int,
+	LateHours int,
+	LTHr int,
+	LTMin int,
+	TotalLateIn int,
+	TotalLeave int,
+	TotalAbsent int,
+	TotalHoliday int,
+	HalfAbsent numeric(5,2)
+	)
+
+	Declare @EmpTbl as table(
+	SLNO int identity(1,1),
+	EmployeeID nvarchar(50),
+	Taken bit default 0
+	);
+
+	Insert Into @EmpTbl(EmployeeID)
+	Select distinct E.EmployeeID from tblEmployeeInfo E 
+	INNER JOIN tblSection S ON E.SectionID=S.SectionID
+	Inner Join tblUserAttendance A ON E.EmployeeID = A.EmployeeID
+	Where E.EmployeeID like @EmployeeIDParam And E.SectionID like @SectionIDParam
+	And E.IsActive=0 And S.IsSpecial=1
+	And YEAR(A.LogTime)=@year And MONTH(A.LogTime)=@month
+
+	Select @NCount=Count(*) from @EmpTbl;
+
+	While @Count <= @NCount
+	begin
+		Select top 1 @SLNO=SLNO,@EmpID=EmployeeID from @EmpTbl Where Taken=0;
+
+		Insert Into @Att
+		Select * from dbo.fnGetAttForShifting(@EmpID,@year,@month) order by convert(date,AttDate)
+
+		Update @EmpTbl Set Taken=1 Where SLNO=@SLNO;
+		Set @Count += 1;
+	end
+
+
+	 select * from @Att order by EmployeeID,convert(date,AttDate);
+end
+
+/*
+Declare  @Att table(
+EmployeeID nvarchar(50),
+CheckDate date,
+LogInTime datetime,
+LogOutTime datetime
+);
+
+	Declare @RawAtt as table(
+	SLNO Int identity(1,1),
+	LogTime datetime,
+	Taken bit default 0
+	);
+
+	Declare @EmployeeID as nvarchar(50) Set @EmployeeID = 'EMP-00001836'
+
+
+	Insert Into @RawAtt(LogTime)
+	Select LogTime from tblUserAttendance Where EmployeeID = @EmployeeID and YEAR(LogTime)=2019 and MONTH(LogTime)=2
+	order by LogTime
+
+	Declare @LogInTime as datetime 
+	Declare @LogOutTime as datetime
+	Declare @SSLNO as int
+	Declare @SLNO as int
+	Declare @Count as int Set @Count = 1
+	Declare @NCount as int Set @NCount = 0
+	Declare @Active as int Set @Active = 0
+
+	Select @NCount = Count(*) from @RawAtt
+	Select @Active = Count(*) from @RawAtt Where Taken=0
+
+	While @Active > 0
+	begin
+		
+		Select Top 1 @SSLNO=SLNO,@LogInTime=LogTime from @RawAtt Where Taken=0 order by LogTime
+
+		Select Top 1 @SLNO=SLNO,@LogOutTime=LogTime from @RawAtt Where Taken=0 And LogTime> @LogInTime  order by LogTime
+
+		Insert Into @Att(EmployeeID,LogInTime,LogOutTime)Values(@EmployeeID,@LogInTime,@LogOutTime)
+
+		Update @RawAtt Set Taken=1 Where SLNO=@SSLNO
+		Update @RawAtt Set Taken=1 Where SLNO=@SLNO
+		Select @Active = Count(*) from @RawAtt Where Taken=0;
+		Print convert(nvarchar,@Active)
+	end
+
+	select * from @Att
+
+*/

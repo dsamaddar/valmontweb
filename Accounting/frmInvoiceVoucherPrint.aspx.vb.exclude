@@ -1,0 +1,97 @@
+﻿Imports System
+Imports System.Collections
+Imports System.Configuration
+Imports System.Linq
+Imports System.Web
+Imports System.Web.Security
+Imports System.Web.UI
+Imports System.Web.UI.HtmlControls
+Imports System.Web.UI.WebControls
+Imports System.Web.UI.WebControls.WebParts
+Imports System.Management
+Imports Microsoft.VisualBasic
+Imports System.Data
+Imports System.Data.SqlClient
+Imports System.Xml.Linq
+Imports System.IO
+Imports CrystalDecisions.CrystalReports.Engine
+Imports CrystalDecisions.Shared
+
+Partial Class Accounting_frmInvoiceVoucherPrint
+    Inherits System.Web.UI.Page
+
+    Dim InvPmntHistoryData As New clsInvoicePaymentDataAccess()
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+        Dim MenuIDs As String
+
+        MenuIDs = Session("PermittedMenus")
+
+        If InStr(MenuIDs, "InvPmntHist~") = 0 Then
+            Response.Redirect("~\frmAILogin.aspx")
+        End If
+
+        If Not IsPostBack Then
+            GetUnprintedInvVoucher()
+        End If
+    End Sub
+
+    Protected Sub GetUnprintedInvVoucher()
+        grdUnPrintedVoucher.DataSource = InvPmntHistoryData.fnGetUnPrintedInvVoucher()
+        grdUnPrintedVoucher.DataBind()
+    End Sub
+
+    Protected Sub grdUnPrintedVoucher_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles grdUnPrintedVoucher.SelectedIndexChanged
+
+        Dim lblVoucherNo As New Label()
+        Dim CommonCode As New clsCommonDataAccess()
+
+        Dim myReport As New ReportDocument()
+        Dim folder As String
+        Dim f As String
+        Dim repName As String
+
+        Dim serverName As [String], uid As [String], pwd As [String], dbName As [String]
+
+        Dim conStr = ConfigurationManager.ConnectionStrings("AIConnectionString").ConnectionString
+        Dim retArr As [String](), usrArr As [String](), pwdArr As [String](), serverArr As [String](), dbArr As [String]()
+
+        lblVoucherNo = grdUnPrintedVoucher.SelectedRow.FindControl("lblVoucherNo")
+
+        Try
+            f = "~/Report/"
+            folder = Server.MapPath(f)
+            repName = folder & "rptInvPaymentTran.rpt"
+            myReport.Load(repName)
+
+            retArr = conStr.Split(";")
+            serverArr = retArr(0).Split("=")
+            dbArr = retArr(1).Split("=")
+            usrArr = retArr(2).Split("=")
+            pwdArr = retArr(3).Split("=")
+
+            serverName = serverArr(1)
+            uid = usrArr(1)
+            pwd = pwdArr(1)
+            dbName = dbArr(1)
+
+            myReport.SetDatabaseLogon(uid, pwd, serverName, dbName)
+
+            Dim parameters As CrystalDecisions.Web.Parameter = New CrystalDecisions.Web.Parameter()
+            myReport.SetParameterValue("@VoucherNo", lblVoucherNo.Text)
+            myReport.ExportToHttpResponse(ExportFormatType.PortableDocFormat, Response, True, "ExportedReport")
+        Catch ex As Exception
+            MessageBox(ex.Message)
+        End Try
+
+    End Sub
+
+    Private Sub MessageBox(ByVal strMsg As String)
+        Dim lbl As New System.Web.UI.WebControls.Label
+        lbl.Text = "<script language='javascript'>" & Environment.NewLine _
+                   & "window.alert(" & "'" & strMsg & "'" & ")</script>"
+        Page.Controls.Add(lbl)
+    End Sub
+
+End Class

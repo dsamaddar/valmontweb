@@ -1,0 +1,130 @@
+﻿<%@ Page Language="VB" MasterPageFile="~/Accounting/Accounting.master" AutoEventWireup="false"
+    CodeFile="frmInvoiceVoucherPrint.aspx.vb" Inherits="Accounting_frmInvoiceVoucherPrint"
+    Title=".:AI:Invoice Voucher Print:." %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="Server">
+    <table style="width: 100%;">
+        <tr align="center">
+            <td>
+            </td>
+            <td>
+                <asp:Panel ID="pnlInvPmntVoucher" runat="server" Width="900px">
+                    <table style="width: 100%;">
+                        <tr align="left">
+                            <td>
+                                <div class="widget-title">
+                                    Print Invoice Payment Voucher</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <asp:GridView ID="grdUnPrintedVoucher" runat="server" AutoGenerateColumns="False"
+                                        CssClass="mGrid">
+                                        <Columns>
+                                            <asp:TemplateField HeaderText="Print" ShowHeader="False">
+                                                <ItemTemplate>
+                                                    <asp:LinkButton ID="LinkButton1" runat="server" CausesValidation="False" CommandName="Select"
+                                                        Text="Select"></asp:LinkButton>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="InvPmntHistoryID" Visible="False">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label1" runat="server" Text='<%# Bind("InvPmntHistoryID") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox1" runat="server" Text='<%# Bind("InvPmntHistoryID") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="InvoiceID" Visible="False">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label2" runat="server" Text='<%# Bind("InvoiceID") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox2" runat="server" Text='<%# Bind("InvoiceID") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="InvoiceNo">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label3" runat="server" Text='<%# Bind("InvoiceNo") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox3" runat="server" Text='<%# Bind("InvoiceNo") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="Supplier">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label4" runat="server" Text='<%# Bind("Supplier") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox4" runat="server" Text='<%# Bind("Supplier") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="PaymentDate">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label5" runat="server" Text='<%# Bind("PaymentDate") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox5" runat="server" Text='<%# Bind("PaymentDate") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="PaymentAmount">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label7" runat="server" Text='<%# Bind("PaymentAmount") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox7" runat="server" Text='<%# Bind("PaymentAmount") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="PaymentMode">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="Label6" runat="server" Text='<%# Bind("PaymentMode") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox6" runat="server" Text='<%# Bind("PaymentMode") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="VoucherNo">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblVoucherNo" runat="server" Text='<%# Bind("VoucherNo") %>'></asp:Label>
+                                                </ItemTemplate>
+                                                <EditItemTemplate>
+                                                    <asp:TextBox ID="TextBox8" runat="server" Text='<%# Bind("VoucherNo") %>'></asp:TextBox>
+                                                </EditItemTemplate>
+                                            </asp:TemplateField>
+                                        </Columns>
+                                    </asp:GridView>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                &nbsp;
+                            </td>
+                        </tr>
+                    </table>
+                </asp:Panel>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr align="center">
+            <td>
+            </td>
+            <td>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr align="center">
+            <td>
+            </td>
+            <td>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+</asp:Content>

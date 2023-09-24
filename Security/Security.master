@@ -1,0 +1,94 @@
+﻿<%@ Master Language="VB" CodeFile="Security.master.vb" Inherits="Security_Security" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Untitled Page</title>
+    <link href="../Sources/css/Title.css" rel="stylesheet" type="text/css" />
+    <link href="../Sources/css/AICssClass.css" rel="stylesheet" type="text/css" />
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+    <style type="text/css">
+        #header, #footer
+        {
+            margin: 0;
+            padding: 0;
+            color: #996600;
+        }
+    </style>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <table style="width: 100%;">
+        <tr>
+            <td style="width: 10%">
+            </td>
+            <td>
+            </td>
+            <td style="width: 10%">
+            </td>
+        </tr>
+        <tr>
+            <td>
+            </td>
+            <td valign="top" align="center">
+                <table style="width: 100%;">
+                    <tr>
+                        <td valign="top" align="left">
+                            <asp:Label ID="lblLoggedInUser" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600"></asp:Label>
+                        </td>
+                        <td valign="top" align="center">
+                            <asp:Image ID="imgSecurityBanner" runat="server" Height="100px" ImageUrl="~/Sources/img/security_shield.jpg" />
+                        </td>
+                        <td valign="top" align="right">
+                            <asp:LinkButton ID="lnkBtnLogOut" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600">Logout</asp:LinkButton>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            </td>
+            <td>
+                <asp:Menu ID="mnuSecurity" runat="server" Orientation="Horizontal" BackColor="#F7F6F3"
+                    DynamicHorizontalOffset="2" Font-Names="Verdana" Font-Size="Small" ForeColor="#7C6F57"
+                    StaticSubMenuIndent="10px">
+                    <StaticSelectedStyle BackColor="#5D7B9D" />
+                    <StaticMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <DynamicHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <DynamicMenuStyle BackColor="#F7F6F3" />
+                    <DynamicSelectedStyle BackColor="#5D7B9D" />
+                    <DynamicMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <StaticHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <Items>
+                        <asp:MenuItem NavigateUrl="~/Security/frmDefineMenu.aspx" Text="Define Menu" Value="defMenu">
+                        </asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/Security/frmRoleWiseMenu.aspx" Text="Role Wise Menu"
+                            Value="Role Wise Menu"></asp:MenuItem>
+                        <asp:MenuItem NavigateUrl="~/Security/fromAssignRole.aspx" Text="Assign Role" Value="Assign Role">
+                        </asp:MenuItem>
+                    </Items>
+                </asp:Menu>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td>
+            </td>
+            <td>
+                <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                </asp:ContentPlaceHolder>
+            </td>
+            <td>
+            </td>
+        </tr>
+    </table>
+    </form>
+</body>
+</html>

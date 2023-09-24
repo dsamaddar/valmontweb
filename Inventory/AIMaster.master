@@ -1,0 +1,160 @@
+﻿<%@ Master Language="VB" CodeFile="AIMaster.master.vb" Inherits="AIMaster" %>
+
+<%@ Register Assembly="AjaxControlToolkit" Namespace="AjaxControlToolkit" TagPrefix="cc1" %>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Untitled Page</title>
+    <link href="../Sources/css/AICssClass.css" rel="stylesheet" type="text/css" />
+    <link href="Sources/css/ValidatorStyle.css" rel="stylesheet" type="text/css" />
+    <link href="Sources/css/GridStyle.css" rel="stylesheet" type="text/css" />
+    <link href="Sources/css/Title.css" rel="stylesheet" type="text/css" />
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+    <style type="text/css">
+        #header, #footer
+        {
+            margin: 0;
+            padding: 0;
+            color: #996600;
+        }
+    </style>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <table style="width: 100%;">
+        <tr align="center">
+            <td style="width: 10%">
+                &nbsp;
+            </td>
+            <td style="width: 80%">
+                <table style="width: 100%;">
+                    <tr>
+                        <td valign="top" align="left">
+                            <asp:Label ID="lblLoggedInUser" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600"></asp:Label>
+                        </td>
+                        <td valign="top" align="center">
+                            <asp:Image ID="imgInventoryBanner" runat="server" Height="90px" ImageUrl="~/Inventory/Sources/images/inventory_banner.png" />
+                        </td>
+                        <td valign="top" align="right">
+                            <asp:LinkButton ID="lnkBtnLogOut" runat="server" Font-Bold="True" Font-Names="Verdana"
+                                Font-Size="9pt" ForeColor="#996600">Logout</asp:LinkButton>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr align="center">
+            <td style="width: 10%">
+            </td>
+            <td align="left" style="width: 80%">
+                <asp:Menu ID="mnuControl" runat="server" BackColor="#F7F6F3" DynamicHorizontalOffset="2"
+                    Font-Names="Verdana" Font-Size="Small" ForeColor="#333300" Orientation="Horizontal"
+                    StaticSubMenuIndent="10px" Font-Bold="False" Width="100%">
+                    <StaticSelectedStyle BackColor="#5D7B9D" />
+                    <StaticMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <DynamicHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <DynamicMenuStyle BackColor="#F7F6F3" />
+                    <DynamicSelectedStyle BackColor="#5D7B9D" />
+                    <DynamicMenuItemStyle HorizontalPadding="5px" VerticalPadding="2px" />
+                    <StaticHoverStyle BackColor="#7C6F57" ForeColor="White" />
+                    <Items>
+                        <asp:MenuItem Text="Requisition" Value="inv_requisition">
+                            <asp:MenuItem NavigateUrl="~/Inventory/Requisition/frmRequisition.aspx" Text="General Requisition"
+                                Value="inv_genrequisition"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Requisition/frmOnDemandRequisition.aspx" Text="On Demand Requisition"
+                                Value="inv_ondemandrequisition"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Requisition/frmApproveRequisition.aspx" Text="Requisition Approval"
+                                Value="inv_requisitionapproval"></asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem Text="Requisition Ctrl" Value="inv_requisitionctrl">
+                            <asp:MenuItem NavigateUrl="~/Inventory/AcceptRequisition/frmAcceptRequisition.aspx"
+                                Text="Accept Requisition(Single)" Value="inv_acceptrequisitionS"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/AcceptRequisition/frmAdvAcceptRequisition.aspx"
+                                Text="Accept Requisition(Multi)" Value="inv_acceptrequisitionM"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/AcceptRequisition/frmDeliverRequisition.aspx"
+                                Text="Requisition Delivery Marking" Value="inv_deliverrequisition"></asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem Text="Procurement" Value="inv_procurement">
+                            <asp:MenuItem NavigateUrl="~/Inventory/Procurement/frmInvoiceInput.aspx" Text="Invoice Entry"
+                                Value="inv_invoiceentry"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Procurement/frmProcurement.aspx" Text="Procurement Details Entry"
+                                Value="inv_procurementdetails"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Procurement/frmProcurementApproval.aspx" Text="Procurement Approval"
+                                Value="inv_procurementapproval"></asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem Text="Item Balance Mgt" Value="inv_itembalancemgt">
+                            <asp:MenuItem NavigateUrl="~/Inventory/FillupWarehouse/clsFillupWarehouse.aspx" Text="Procurement To Warehouse"
+                                Value="inv_proctoware"></asp:MenuItem>
+                            <asp:MenuItem Text="Warehouse To Warehouse" Value="inv_waretoware" NavigateUrl="~/Inventory/FillupWarehouse/frmWarehouseToWarehouse.aspx">
+                            </asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem Text="Reports" Value="inv_reports">
+                            <asp:MenuItem NavigateUrl="~/Inventory/Report/frmUserRequisitionHistory.aspx" Text="Requisition History"
+                                Value="inv_rptreqhistory"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Report/frmDeliveredRequisition.aspx" Text="Item Delivery History"
+                                Value="inv_rptdeliveredreq"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Report/frmReportProcurement.aspx" Text="Procurement Report"
+                                Value="inv_rptprocurement"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Report/frmReportRequisition.aspx" Text="Requisition Report"
+                                Value="inv_rptrequisition"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Report/frmReportLowBalance.aspx" Text="Low Balance Report"
+                                Value="inv_rptlowbalance"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Report/frmWarehouseItemBalance.aspx" Text="Warehouse Balance Status"
+                                Value="inv_warebalance"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Report/frmItemBalanceStatus.aspx" Text="Item Balance Status"
+                                Value="inv_tembalancestat"></asp:MenuItem>
+                        </asp:MenuItem>
+                        <asp:MenuItem Text="Admin" Value="inv_administration">
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmWarehouseManagement.aspx"
+                                Text="Warehouse Management" Value="inv_waremgt"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmInventoryItems.aspx" Text="Item Management"
+                                Value="inv_itemmgt"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmItemUnitDefinition.aspx"
+                                Text="Unit Definition" Value="inv_unitmgt"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmCreateSupplier.aspx" Text="Manage Supplier"
+                                Value="inv_suppliermgt"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmBuyerEntry.aspx" Text="Buyer Entry"
+                                Value="inv_buyermgt"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmColorEntry.aspx" Text="Color Entry"
+                                Value="inv_colormgt"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmStyleEntry.aspx" Text="Style Entry"
+                                Value="inv_stylemgt"></asp:MenuItem>
+                            <asp:MenuItem NavigateUrl="~/Inventory/Administration/frmOrderEntry.aspx" Text="Order Entry"
+                                Value="inv_ordermgt"></asp:MenuItem>
+                        </asp:MenuItem>
+                    </Items>
+                </asp:Menu>
+            </td>
+            <td style="width: 10%">
+            </td>
+        </tr>
+        <tr align="center">
+            <td style="width: 10%">
+            </td>
+            <td>
+                <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                </asp:ContentPlaceHolder>
+            </td>
+            <td style="width: 10%">
+            </td>
+        </tr>
+        <tr align="center">
+            <td style="width: 10%">
+            </td>
+            <td>
+                <div id="footer">
+                    <p>
+                        © 2016 BankUltimus.COM. All rights reserved.</p>
+                </div>
+            </td>
+            <td style="width: 10%">
+            </td>
+        </tr>
+    </table>
+    </form>
+</body>
+</html>

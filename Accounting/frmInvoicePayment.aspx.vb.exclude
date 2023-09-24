@@ -1,0 +1,279 @@
+﻿Imports System
+Imports System.Collections
+Imports System.Configuration
+Imports System.Linq
+Imports System.Web
+Imports System.Web.Security
+Imports System.Web.UI
+Imports System.Web.UI.HtmlControls
+Imports System.Web.UI.WebControls
+Imports System.Web.UI.WebControls.WebParts
+Imports System.Management
+Imports Microsoft.VisualBasic
+Imports System.Data
+Imports System.Data.SqlClient
+Imports System.Xml.Linq
+Imports System.IO
+Imports CrystalDecisions.CrystalReports.Engine
+Imports CrystalDecisions.Shared
+
+Partial Class Accounting_frmInvoicePayment
+    Inherits System.Web.UI.Page
+
+    Dim ChqLeafData As clsLoadChqInfoDataAccess = New clsLoadChqInfoDataAccess()
+    Dim BankAccountData As New clsBankAccountDataAccess()
+    Dim InvoiceData As New clsInvoiceDataAccess()
+    Dim InvoiceItemData As New clsInvoiceItemDataAccess()
+    Dim InvPmntData As New clsInvoicePaymentDataAccess()
+
+    Dim TotalInvAmnt As Double = 0
+    Dim PaidAmount As Double = 0
+    Dim DueAmount As Double = 0
+
+    Protected Sub Page_Load(ByVal sender As Object, ByVal e As System.EventArgs) Handles Me.Load
+
+        Dim MenuIDs As String
+
+        MenuIDs = Session("PermittedMenus")
+
+        If InStr(MenuIDs, "InvPmnt~") = 0 Then
+            Response.Redirect("~\frmAILogin.aspx")
+        End If
+
+        If Not IsPostBack Then
+            GetApprovedInvoiceUnPaid()
+            GetCompanyStakeHolderList()
+            Session("LoginUserID") = "dsamaddar"
+        End If
+    End Sub
+
+    Protected Sub GetCompanyStakeHolderList()
+        drpCompanyList.DataTextField = "Stakeholder"
+        drpCompanyList.DataValueField = "ReferenceID"
+        drpCompanyList.DataSource = BankAccountData.fnSearchStakeholders("", "Company", "")
+        drpCompanyList.DataBind()
+
+        If drpCompanyList.Items.Count >= 0 Then
+            drpCompanyList.SelectedIndex = 0
+            GetBankAccsByStakeHolder(drpCompanyList.SelectedValue)
+        End If
+    End Sub
+
+    Protected Sub GetBankAccsByStakeHolder(ByVal ReferenceID As String)
+
+        Dim BankAccount As New clsBankAccount()
+        BankAccount.ReferenceID = ReferenceID
+
+        drpOutGoingBankAccount.DataTextField = "AccountNo"
+        drpOutGoingBankAccount.DataValueField = "BankAccountID"
+        drpOutGoingBankAccount.DataSource = BankAccountData.fnGetBankAccsByRefID(BankAccount)
+        drpOutGoingBankAccount.DataBind()
+
+        If drpOutGoingBankAccount.Items.Count > 0 Then
+            drpOutGoingBankAccount.SelectedIndex = 0
+            ShowAvailableChqsByAccID(drpOutGoingBankAccount.SelectedValue)
+        End If
+
+    End Sub
+
+    Protected Sub GetBankAccsByStakeHolder_supplier(ByVal ReferenceID As String)
+
+        Dim BankAccount As New clsBankAccount()
+        BankAccount.ReferenceID = ReferenceID
+
+        drpBankAccountPayableTo.DataTextField = "AccountNo"
+        drpBankAccountPayableTo.DataValueField = "BankAccountID"
+        drpBankAccountPayableTo.DataSource = BankAccountData.fnGetBankAccsByRefID(BankAccount)
+        drpBankAccountPayableTo.DataBind()
+
+    End Sub
+
+    Protected Sub GetApprovedInvoiceUnPaid()
+        grdInvoiceUnPaid.DataSource = InvoiceData.fnGetApprovedInvoiceUnPaid()
+        grdInvoiceUnPaid.DataBind()
+    End Sub
+
+    Protected Sub grdInvoiceUnPaid_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles grdInvoiceUnPaid.SelectedIndexChanged
+        Dim lblInvoiceID, lblInvoiceNo, lblSupplierID, lblSupplierName, lblInvoiceDate, lblInvoiceCost, lblSubmittedBy, _
+        lblSubmissionDate As New System.Web.UI.WebControls.Label()
+
+        lblInvoiceID = grdInvoiceUnPaid.SelectedRow.FindControl("lblInvoiceID")
+        lblInvoiceNo = grdInvoiceUnPaid.SelectedRow.FindControl("lblInvoiceNo")
+        lblSupplierName = grdInvoiceUnPaid.SelectedRow.FindControl("lblSupplierName")
+        lblInvoiceDate = grdInvoiceUnPaid.SelectedRow.FindControl("lblInvoiceDate")
+        lblInvoiceCost = grdInvoiceUnPaid.SelectedRow.FindControl("lblInvoiceCost")
+        lblSubmittedBy = grdInvoiceUnPaid.SelectedRow.FindControl("lblSubmittedBy")
+        lblSubmissionDate = grdInvoiceUnPaid.SelectedRow.FindControl("lblSubmissionDate")
+        lblSupplierID = grdInvoiceUnPaid.SelectedRow.FindControl("lblSupplierID")
+
+        lblSupplier.Text = lblSupplierName.Text
+        lblFrmInvoiceNo.Text = lblInvoiceNo.Text
+        lblPurchaseDate.Text = lblInvoiceDate.Text
+        lblTotalCost.Text = lblInvoiceCost.Text
+        lblPreparedBy.Text = lblSubmittedBy.Text
+        lblPreparationDate.Text = lblSubmissionDate.Text
+
+        grdInvoiceItems.DataSource = InvoiceItemData.fnGetDuePmntInvItems(lblInvoiceID.Text)
+        grdInvoiceItems.DataBind()
+
+        GetBankAccsByStakeHolder_supplier(lblSupplierID.Text)
+
+        lblInvPaidAmount.Text = PaidAmount.ToString()
+        lblInvDueAmount.Text = DueAmount.ToString()
+        txtChequeName.Text = lblSupplierName.Text
+
+    End Sub
+
+    Protected Sub btnShowTransaction_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnShowTransaction.Click
+
+    End Sub
+
+    Protected Sub btnExecute_Click(ByVal sender As Object, ByVal e As System.EventArgs) Handles btnExecute.Click
+        If Convert.ToDouble(txtPaymentAmount.Text) > Convert.ToDouble(lblInvDueAmount.Text) Then
+            MessageBox("Payment Amount Exceedes Due Amount.")
+            Exit Sub
+        End If
+
+        If rdbtnPmntMethod.SelectedIndex = -1 Then
+            MessageBox("Select Payment Mode.")
+            Exit Sub
+        End If
+
+        Dim lblInvoiceID As New System.Web.UI.WebControls.Label()
+
+        lblInvoiceID = grdInvoiceUnPaid.SelectedRow.FindControl("lblInvoiceID")
+
+        Dim InvPmnt As New clsInvoicePayment()
+        InvPmnt.InvoiceID = lblInvoiceID.Text
+        InvPmnt.BankAccountID = drpOutGoingBankAccount.SelectedValue
+        InvPmnt.PaymentMode = rdbtnPmntMethod.SelectedValue
+        InvPmnt.PaymentAmount = Convert.ToDouble(txtPaymentAmount.Text)
+        InvPmnt.ChqName = txtChequeName.Text
+        InvPmnt.ChqNo = drpAvailableChqs.SelectedValue
+        InvPmnt.ChqDate = Convert.ToDateTime(txtValueDate.Text)
+        InvPmnt.EntryBy = Session("LoginUserID")
+
+
+        Dim lblVoucherNo As New Label()
+        Dim CommonCode As New clsCommonDataAccess()
+
+        Dim myReport As New ReportDocument()
+        Dim folder As String
+        Dim f As String
+        Dim repName As String
+
+        Dim serverName As [String], uid As [String], pwd As [String], dbName As [String]
+
+        Dim conStr = ConfigurationManager.ConnectionStrings("AIConnectionString").ConnectionString
+        Dim retArr As [String](), usrArr As [String](), pwdArr As [String](), serverArr As [String](), dbArr As [String]()
+
+        Try
+            f = "~/Report/"
+            folder = Server.MapPath(f)
+            repName = folder & "rptChqPrint.rpt"
+            myReport.Load(repName)
+
+            retArr = conStr.Split(";")
+            serverArr = retArr(0).Split("=")
+            dbArr = retArr(1).Split("=")
+            usrArr = retArr(2).Split("=")
+            pwdArr = retArr(3).Split("=")
+
+            serverName = serverArr(1)
+            uid = usrArr(1)
+            pwd = pwdArr(1)
+            dbName = dbArr(1)
+
+            myReport.SetDatabaseLogon(uid, pwd, serverName, dbName)
+
+            Dim parameters As CrystalDecisions.Web.Parameter = New CrystalDecisions.Web.Parameter()
+            myReport.SetParameterValue("@InvoiceID", InvPmnt.InvoiceID)
+            myReport.SetParameterValue("@BankAccountID", InvPmnt.BankAccountID)
+            myReport.SetParameterValue("@PaymentMode", InvPmnt.PaymentMode)
+            myReport.SetParameterValue("@PaymentAmount", InvPmnt.PaymentAmount)
+            myReport.SetParameterValue("@ChqName", InvPmnt.ChqName)
+            myReport.SetParameterValue("@ChqNo", InvPmnt.ChqNo)
+            myReport.SetParameterValue("@ChqDate", InvPmnt.ChqDate)
+            myReport.SetParameterValue("@EntryBy", InvPmnt.EntryBy)
+
+            myReport.ExportToHttpResponse(ExportFormatType.PortableDocFormat, Response, True, "ExportedReport")
+            MessageBox("Paid Successfully.")
+            ClearForm()
+        Catch ex As Exception
+            MessageBox(ex.Message)
+        End Try
+
+    End Sub
+
+    Protected Sub ClearForm()
+        ShowAvailableChqsByAccID(drpOutGoingBankAccount.SelectedValue)
+
+        grdInvoiceUnPaid.SelectedIndex = -1
+        GetApprovedInvoiceUnPaid()
+
+        grdInvoiceItems.DataSource = ""
+        grdInvoiceItems.DataBind()
+
+        lblSupplier.Text = "N\A"
+        lblPreparationDate.Text = "N\A"
+        lblPreparedBy.Text = "N\A"
+        lblPurchaseDate.Text = "N\A"
+
+        lblFrmInvoiceNo.Text = "N\A"
+        lblTotalCost.Text = "0"
+        lblInvDueAmount.Text = "0"
+        lblInvPaidAmount.Text = "0"
+
+        txtChequeName.Text = ""
+        txtPaymentAmount.Text = ""
+        txtValueDate.Text = ""
+
+    End Sub
+
+    Protected Sub ShowAvailableChqsByAccID(ByVal BankAccountID As String)
+        drpAvailableChqs.DataTextField = "ChqNo"
+        drpAvailableChqs.DataValueField = "ChqLeafID"
+        drpAvailableChqs.DataSource = ChqLeafData.fnGetAvailableChqsByAccID(BankAccountID)
+        drpAvailableChqs.DataBind()
+
+    End Sub
+
+    Private Sub MessageBox(ByVal strMsg As String)
+        Dim lbl As New System.Web.UI.WebControls.Label
+        lbl.Text = "<script language='javascript'>" & Environment.NewLine _
+                   & "window.alert(" & "'" & strMsg & "'" & ")</script>"
+        Page.Controls.Add(lbl)
+    End Sub
+
+    Protected Sub grdInvoiceItems_RowDataBound(ByVal sender As Object, ByVal e As System.Web.UI.WebControls.GridViewRowEventArgs) Handles grdInvoiceItems.RowDataBound
+        Dim lblTotalPrice, lblPaidAmount, lblDueAmount As New Label()
+        If e.Row.RowType = DataControlRowType.DataRow Then
+            lblTotalPrice = e.Row.FindControl("lblTotalPrice")
+            lblPaidAmount = e.Row.FindControl("lblPaidAmount")
+            lblDueAmount = e.Row.FindControl("lblDueAmount")
+            If lblTotalPrice Is Nothing Then
+
+            Else
+                TotalInvAmnt += Convert.ToDouble(lblTotalPrice.Text)
+                PaidAmount += Convert.ToDouble(lblPaidAmount.Text)
+                DueAmount += Convert.ToDouble(lblDueAmount.Text)
+            End If
+
+        End If
+
+        If e.Row.RowType = DataControlRowType.Footer Then
+            e.Row.Cells(4).Text = "Total:"
+            e.Row.Cells(5).Text = TotalInvAmnt.ToString()
+            e.Row.Cells(6).Text = PaidAmount.ToString()
+            e.Row.Cells(7).Text = DueAmount.ToString()
+        End If
+    End Sub
+
+    Protected Sub drpOutGoingBankAccount_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles drpOutGoingBankAccount.SelectedIndexChanged
+        ShowAvailableChqsByAccID(drpOutGoingBankAccount.SelectedValue)
+    End Sub
+
+    Protected Sub drpCompanyList_SelectedIndexChanged(ByVal sender As Object, ByVal e As System.EventArgs) Handles drpCompanyList.SelectedIndexChanged
+
+    End Sub
+End Class
